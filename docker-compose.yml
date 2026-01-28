@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    container_name: davinci-landing
+    command: pipenv run python manage.py runserver 0.0.0.0:8023
+    volumes:
+      - .:/app
+    ports:
+      - "8023:8023"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+    stdin_open: true
+    tty: true
+    networks:
+      - davinci-network
+
+networks:
+  davinci-network:
+    driver: bridge
