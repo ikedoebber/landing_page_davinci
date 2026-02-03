@@ -1,38 +1,27 @@
-# Use Python 3.12 slim image
 FROM python:3.12-slim
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV PIPENV_VENV_IN_PROJECT=1
-ENV PIPENV_PIPFILE=/app/Pipfile
 
-# Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Dependências do sistema
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pipenv
-RUN pip install --upgrade pip pipenv
+# Dependências Python
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy Pipfile and Pipfile.lock
-COPY Pipfile Pipfile.lock /app/
+# Projeto
+COPY . .
 
-# Install Python dependencies
-RUN pipenv install --deploy --ignore-pipfile
+# Coletar arquivos estáticos
+RUN python manage.py collectstatic --noinput
 
-# Copy project
-COPY . /app/
+EXPOSE 8023
 
-# Collect static files
-RUN /app/.venv/bin/python manage.py collectstatic --noinput
-
-# Expose port
-EXPOSE 8000
-
-# Run gunicorn
-CMD ["/app/.venv/bin/gunicorn", "landing.wsgi:application", "--bind", "0.0.0.0:8023"]
+# Django direto (EasyPanel faz o resto)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8023"]
